@@ -51,7 +51,8 @@ jobs:
 
     - name: Clean Up
       run: |
-        rm -rf release release.zip
+        rm -rf release
+        rm -f release.zip
         if [ "$(ls -A cache)" ]; then
           echo "Cache still has images."
         else
