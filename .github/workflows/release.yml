@@ -1,0 +1,45 @@
+name: Release BINGO Images
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # Runs every 30 seconds
+  workflow_dispatch: # Manual trigger option
+
+jobs:
+  release-bingo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Cached Images
+      uses: actions/download-artifact@v3
+      with:
+        name: cache
+        path: cache
+
+    - name: Release 2 Images
+      run: |
+        mkdir -p release
+        images=$(ls cache | head -n 2) # Select the first 2 images
+        for image in $images; do
+          mv "cache/$image" "release/$image"
+          echo "Released $image"
+        done
+
+    - name: Upload Release Images
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.inputs.release_url }}
+        asset_path: release
+        asset_name: bingo_images
+        asset_content_type: application/zip
+
+    - name: Clean Up
+      run: |
+        rm -rf release
+        if [ "$(ls -A cache)" ]; then
+          echo "Cache still has images."
+        else
+          echo "Cache is empty. Triggering regeneration workflow..."
+          gh workflow run generate.yml # Trigger regeneration

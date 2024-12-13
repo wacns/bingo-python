@@ -1,0 +1,77 @@
+name: Generate BINGO Images
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Manual trigger option
+
+jobs:
+  generate-bingo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install matplotlib pandas
+
+    - name: Generate BINGO Images
+      run: |
+        mkdir -p cache
+        python - <<EOF
+        import random
+        import matplotlib.pyplot as plt
+        import pandas as pd
+        import os
+
+        def generate_bingo_image(image_id, output_dir="./cache"):
+            os.makedirs(output_dir, exist_ok=True)
+            numbers = random.sample(range(1, 26), 25)
+            grid = [numbers[i:i+5] for i in range(0, 25, 5)]
+            columns = ['B', 'I', 'N', 'G', 'O']
+            df = pd.DataFrame(grid, columns=columns)
+            fig, ax = plt.subplots(figsize=(8, 8))
+            ax.axis('off')
+            table = plt.table(
+                cellText=df.values,
+                colLabels=df.columns,
+                cellLoc='center',
+                loc='center',
+                bbox=[0, 0, 1, 1]
+            )
+            table.auto_set_font_size(False)
+            table.set_fontsize(14)
+            n_rows, n_cols = len(df), len(df.columns)
+            for i in range(n_rows + 1):
+                for j in range(n_cols):
+                    cell = table[(i, j)]
+                    cell.set_height(1 / n_rows)
+                    cell.set_width(1 / n_cols)
+                    cell.set_edgecolor('black')
+                    cell.set_linewidth(2)
+                    if i == 0:
+                        cell.set_text_props(color='red')
+                        cell.set_facecolor('white')
+            filename = os.path.join(output_dir, f"bingo_{image_id}.png")
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
+            plt.close()
+
+        for i in range(100):
+            generate_bingo_image(i)
+        print("Generated 100 images in the ./cache folder")
+        EOF
+
+    - name: Upload Cache
+      uses: actions/upload-artifact@v4.4.3
+      with:
+        name: cache
+        path: cache
