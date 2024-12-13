@@ -2,7 +2,7 @@ name: Release BINGO Images
 
 on:
   schedule:
-    - cron: "*/1 * * * *" # Runs every 30 seconds
+    - cron: "*/1 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -40,12 +40,14 @@ jobs:
       run: |
         for file in release/*; do
           echo "Uploading $file"
+          UPLOAD_URL="${{ steps.create_release.outputs.upload_url }}"
+          FINAL_URL="${UPLOAD_URL%\{?name,label\}}?name=$(basename $file)"
           curl \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/octet-stream" \
             --data-binary @"$file" \
-            "${{ steps.create_release.outputs.upload_url }}&name=$(basename $file)"
+            "$FINAL_URL"
         done
 
     - name: Clean Up
