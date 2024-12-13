@@ -2,8 +2,8 @@ name: Release BINGO Images
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # Runs every 30 seconds
-  workflow_dispatch: # Manual trigger option
+    - cron: "*/1 * * * *" # Runs every 30 seconds
+  workflow_dispatch:
 
 jobs:
   release-bingo:
@@ -13,7 +13,7 @@ jobs:
     - name: Download Cached Images
       uses: actions/download-artifact@v3
       with:
-        name: cache
+        name: shared-cache
         path: cache
 
     - name: Release 2 Images
@@ -42,4 +42,3 @@ jobs:
           echo "Cache still has images."
         else
           echo "Cache is empty. Triggering regeneration workflow..."
-          gh workflow run generate.yml # Trigger regeneration

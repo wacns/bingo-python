@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Manual trigger option
+  workflow_dispatch:
 
 jobs:
   generate-bingo:
@@ -73,5 +73,5 @@ jobs:
     - name: Upload Cache
       uses: actions/upload-artifact@v4.4.3
       with:
-        name: cache
+        name: shared-cache
         path: cache
