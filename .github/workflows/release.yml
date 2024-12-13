@@ -2,7 +2,7 @@ name: Release BINGO Images
 
 on:
   schedule:
-    - cron: "*/1 * * * *" # Runs every 30 seconds
+    - cron: "*/30 * * * *" # Runs every 30 seconds
   workflow_dispatch:
 
 jobs:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: Download Cached Images
-      uses: actions/download-artifact@v3
+      uses: actions/cache@v3
       with:
-        name: shared-cache
         path: cache
+        key: bingo-images-cache
 
     - name: Release 2 Images
       run: |
