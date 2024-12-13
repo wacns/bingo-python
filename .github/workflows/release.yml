@@ -16,6 +16,11 @@ jobs:
         path: cache
         key: bingo-images-cache
 
+    - name: Debug Cache Contents
+      run: |
+        echo "Listing cache contents:"
+        ls -l cache
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -30,11 +35,20 @@ jobs:
     - name: Release 2 Images
       run: |
         mkdir -p release
-        images=$(ls cache | head -n 2) # Select the first 2 images
+        echo "Processing images from cache..."
+        images=$(ls cache 2>/dev/null | head -n 2) || true # Handle empty cache gracefully
+        if [ -z "$images" ]; then
+          echo "No images found in cache. Skipping release."
+          exit 0
+        fi
         for image in $images; do
-          mv "cache/$image" "release/$image"
-          rm "cache/$image" # Delete the released image from cache
-          echo "Prepared and deleted $image for upload"
+          if [ -f "cache/$image" ]; then
+            mv "cache/$image" "release/$image"
+            rm "cache/$image"
+            echo "Prepared and deleted $image for upload"
+          else
+            echo "File cache/$image does not exist. Skipping."
+          fi
         done
 
     - name: Upload Each Image
@@ -54,7 +68,7 @@ jobs:
     - name: Clean Up and Re-trigger Generate Workflow if Cache is Empty
       run: |
         rm -rf release
-        if [ "$(ls -A cache)" ]; then
+        if [ "$(ls -A cache 2>/dev/null)" ]; then
           echo "Cache still has images."
         else
           echo "Cache is empty. Triggering regeneration workflow..."
