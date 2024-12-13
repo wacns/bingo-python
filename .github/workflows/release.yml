@@ -36,19 +36,22 @@ jobs:
           echo "Released $image"
         done
 
+    - name: Compress Release Folder
+      run: zip -r release.zip release
+
     - name: Upload Release Images
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release
+        asset_path: release.zip
         asset_name: bingo_images_${{ github.run_number }}.zip
         asset_content_type: application/zip
 
     - name: Clean Up
       run: |
-        rm -rf release
+        rm -rf release release.zip
         if [ "$(ls -A cache)" ]; then
           echo "Cache still has images."
         else
