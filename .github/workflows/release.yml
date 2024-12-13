@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Download Cached Images
+    - name: Restore Cached Images
       uses: actions/cache@v3
       with:
         path: cache
@@ -52,11 +52,6 @@ jobs:
               mv "cache/$image" "release/$image"
               echo "Deleting $image from cache/"
               rm -f "cache/$image"
-              if [ ! -f "cache/$image" ]; then
-                echo "Successfully deleted $image from cache."
-              else
-                echo "Failed to delete $image from cache."
-              fi
             else
               echo "Warning: File cache/$image does not exist. Skipping."
             fi
@@ -84,11 +79,13 @@ jobs:
           echo "No files to upload."
         fi
 
-    - name: Update Cache
+    - name: Save Updated Cache
       uses: actions/cache@v3
       with:
         path: cache
-        key: bingo-images-cache
+        key: bingo-images-cache-${{ hashFiles('cache/*') }}
+        restore-keys: |
+          bingo-images-cache
 
     - name: Clean Up and Re-trigger Generate Workflow if Cache is Empty
       run: |
@@ -102,4 +99,3 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/generate.yml/dispatches \
             -d '{"ref": "main"}'
-        fi
