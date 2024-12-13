@@ -2,7 +2,7 @@ name: Release BINGO Images
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # Runs every 30 seconds
+    - cron: "*/1 * * * *" # Runs every 30 seconds
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,17 @@ jobs:
       with:
         path: cache
         key: bingo-images-cache
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: release-bingo-${{ github.run_number }}
+        release_name: "BINGO Images Release ${{ github.run_number }}"
+        draft: false
+        prerelease: false
 
     - name: Release 2 Images
       run: |
@@ -30,9 +41,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.inputs.release_url }}
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: release
-        asset_name: bingo_images
+        asset_name: bingo_images_${{ github.run_number }}.zip
         asset_content_type: application/zip
 
     - name: Clean Up
