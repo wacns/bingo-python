@@ -2,7 +2,7 @@ name: Release BINGO Images
 
 on:
   schedule:
-    - cron: "*/1 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
     - name: Debug Cache Contents
       run: |
         echo "Listing cache contents:"
-        ls -l cache
+        ls -l cache || echo "Cache directory is empty or missing."
 
     - name: Create Release
       id: create_release
@@ -36,18 +36,19 @@ jobs:
       run: |
         mkdir -p release
         echo "Processing images from cache..."
-        images=$(ls cache 2>/dev/null | head -n 2) || true # Handle empty cache gracefully
+        images=$(ls cache 2>/dev/null | head -n 2) || true
         if [ -z "$images" ]; then
           echo "No images found in cache. Skipping release."
           exit 0
         fi
         for image in $images; do
           if [ -f "cache/$image" ]; then
+            echo "Moving $image to release/"
             mv "cache/$image" "release/$image"
-            rm "cache/$image"
-            echo "Prepared and deleted $image for upload"
+            echo "Deleting $image from cache/"
+            rm -f "cache/$image" || echo "Warning: Could not delete cache/$image."
           else
-            echo "File cache/$image does not exist. Skipping."
+            echo "Warning: File cache/$image does not exist. Skipping."
           fi
         done
 
