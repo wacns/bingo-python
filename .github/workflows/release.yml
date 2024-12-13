@@ -57,3 +57,4 @@ jobs:
           echo "Cache still has images."
         else
           echo "Cache is empty. Triggering regeneration workflow..."
+        fi
