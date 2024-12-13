@@ -33,18 +33,19 @@ jobs:
         images=$(ls cache | head -n 2) # Select the first 2 images
         for image in $images; do
           mv "cache/$image" "release/$image"
-          echo "Released $image"
+          echo "Prepared $image for upload"
         done
 
     - name: Upload Each Image
       run: |
         for file in release/*; do
           echo "Uploading $file"
-          curl -X POST \
+          curl \
+            -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: image/png" \
+            -H "Content-Type: application/octet-stream" \
             --data-binary @"$file" \
-            ${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)
+            "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
         done
 
     - name: Clean Up
